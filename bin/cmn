@@ -1,0 +1,46 @@
+import sys
+from argparse import ArgumentParser, FileType
+import cmn
+import cedict
+
+parser = ArgumentParser(description="Tools for Mandarin dictionary research and\
+                        pinyin manipulation")
+subparsers = parser.add_subparsers(dest="command")
+
+# Pinyin Command
+parser_pinyin = subparsers.add_parser('pinyin', help="Pinyin conversions")
+parser_pinyin.add_argument('infile', nargs='?', type=FileType('r'),
+                           default=sys.stdin)
+parser_pinyin.add_argument('-o', '--outfile', nargs='?', type=FileType('w'),
+                           default=sys.stdout)
+group = parser_pinyin.add_mutually_exclusive_group(required=True)
+group.add_argument('-a', '--accent', action="store_true")
+group.add_argument('-n', '--number', action="store_true")
+group.add_argument('-r', '--remove', action="store_true")
+
+
+args = parser.parse_args()
+out = args.outfile
+
+print args
+
+if args.command == 'pinyin':
+    def remove_tones(s):
+        return u''.join([c for c in cedict.depinyinize(s) if not c.isdigit()])
+
+    if args.accent:
+        proc = cedict.pinyinize
+    elif args.number:
+        proc = cedict.depinyinize
+    else:
+        proc = remove_tones
+
+    for s in args.infile:
+        args.outfile.write(proc(s).encode('utf-8'))
+
+elif args.command == 'dict':
+    pass
+
+#d = open('cedict_ts.u8')
+
+# vim: set filetype=python:
